@@ -1,22 +1,16 @@
 #!/usr/bin/env bash
 
-//Menu
-PS3='Please enter your choice: '
-options=("Option 1" "Option 2" "Quit")
-select opt in "${options[@]}"
-do
-    case $opt in
-        "1) Open a File Repository")
-            echo "Option 1 selected, open a file repository"
-            break
-            ;;
-        "2) Create a New File Repository")
-            echo "Option 2 selected, create a new file repository"
-            break
-            ;;
-        "Quit")
-            break
-            ;;
-        *) echo "invalid option $REPLY";;
-    esac
-done
+# Menu
+echo "Option 1) Open a file repository"
+echo "Option 2) Create a new file repository"
+echo "Option 3) Quit"
+read -p "Please enter an option: " option
+case $option in
+  1 ) echo "You entered one, open a file repository"
+  ;;
+  2 ) echo "You entered two, create a new file repository:"
+  ;;
+  3 ) echo "Goodbye!"
+  ;;
+  *) echo "You entered a number not between 1 and 3."
+esac
