@@ -14,3 +14,13 @@ case $option in
   ;;
   *) echo "You entered a number not between 1 and 3."
 esac
+
+#automatically listing the contents of
+#the file repository currently in use
+
+#read the permissions 
+ls -l
+#pipe w's from permissions (use space as delimeter)
+# into recursive if statement
+#if permission is assigned to user running the script then print
+#cat?
