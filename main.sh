@@ -18,15 +18,19 @@ esac
 #automatically listing the contents of
 #the file repository currently in use
 
-#read the permissions
+#read the permissions (file type (1), user persmissions(3),
+#group permissions (3), other permissions(3))
 ls -l
+
 #pipe w's from permissions (use space as delimeter)
 mkfifo mypipe
+
 # into recursive if statement
 if(permission is assigned to user running the script then print)
 {
 
 }
+
 #cat? is only good for shorter files use the 'less' command
 #(allows scrolling up and down, press q to exit to command line)
 
