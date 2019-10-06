@@ -28,7 +28,7 @@ mkfifo mypipe
 
 while read line
 do
-echo "LINE: $line"
+  echo "LINE: $line"
 done < /dev/stdin
 
 
@@ -39,8 +39,10 @@ STDOUT
 # into recursive if statement
 if[permission is assigned to user running the script then print, commands]
 then
-#commands
-echo ""
+  #commands
+  echo ""
+else
+  echo "No permissions were found"
 fi
 
 
