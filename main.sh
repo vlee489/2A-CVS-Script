@@ -26,6 +26,12 @@ ls -l
 #need to use a while loop to ensure every single line is read in the file
 mkfifo mypipe
 
+while [[ condition ]];
+do
+  #statements
+done
+
+
 # into recursive if statement
 if(permission is assigned to user running the script then print)
 {
