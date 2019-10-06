@@ -37,7 +37,7 @@ STDIN
 STDOUT
 
 # into recursive if statement
-if(permission is assigned to user running the script then print, commands)
+if[permission is assigned to user running the script then print, commands]
 then
 #commands
 echo ""
