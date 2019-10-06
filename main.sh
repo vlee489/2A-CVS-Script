@@ -37,10 +37,11 @@ STDIN
 STDOUT
 
 # into recursive if statement
-if(permission is assigned to user running the script then print)
-{
+if(permission is assigned to user running the script then print, commands)
+then
+commands
+fi
 
-}
 
 #cat? is only good for shorter files use the 'less' command
 #(allows scrolling up and down, press q to exit to command line)
