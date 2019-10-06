@@ -19,10 +19,11 @@ esac
 #the file repository currently in use
 
 #read the permissions (file type (1), user persmissions(3),
-#group permissions (3), other permissions(3))
+#group permissions (3), other permissions(3), lecture 7 notes)
 ls -l
 
 #pipe w's from permissions (use space as delimeter)
+#need to use a while loop to ensure every single line is read in the file
 mkfifo mypipe
 
 # into recursive if statement
