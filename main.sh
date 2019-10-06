@@ -31,6 +31,9 @@ do
   #statements
 done
 
+#using a pipe:
+STDIN
+STDOUT
 
 # into recursive if statement
 if(permission is assigned to user running the script then print)
