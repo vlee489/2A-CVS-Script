@@ -29,3 +29,6 @@ if(permission is assigned to user running the script then print)
 }
 #cat? is only good for shorter files use the 'less' command
 #(allows scrolling up and down, press q to exit to command line)
+
+#use the 'sort' command to filter the file contents. try 'help' to
+#find any versions that may be relevant.
