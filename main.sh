@@ -39,7 +39,8 @@ STDOUT
 # into recursive if statement
 if(permission is assigned to user running the script then print, commands)
 then
-commands
+#commands
+echo ""
 fi
 
 
