@@ -26,10 +26,11 @@ ls -l
 #need to use a while loop to ensure every single line is read in the file
 mkfifo mypipe
 
-while [[ condition ]];
+while read line
 do
-  #statements
-done
+echo "LINE: $line"
+done < /dev/stdin
+
 
 #using a pipe:
 STDIN
