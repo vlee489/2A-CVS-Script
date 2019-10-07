@@ -25,6 +25,8 @@ ls -l
 #pipe w's from permissions (use space as delimeter)
 #need to use a while loop to ensure every single line is read in the file
 mkfifo mypipe
+#Where 2 is the field number of the space-delimited field you want.
+cut -d '' -f 2
 
 while read line
 do
