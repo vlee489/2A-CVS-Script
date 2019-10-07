@@ -10,7 +10,7 @@ case $option in
   ;;
   2 ) echo "You entered two, create a new file repository:"
   ;;
-  3 ) echo "Goodbye!"
+  0 ) echo "Goodbye!"
   ;;
   *) echo "You entered a number not between 1 and 3."
 esac
