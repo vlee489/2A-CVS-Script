@@ -3,17 +3,46 @@
 # Menu
 echo "Option 1) Open a file repository"
 echo "Option 2) Create a new file repository"
-echo "Option 3) Quit"
+echo "Option 0) Quit"
 read -p "Please enter an option: " option
+
+
+while true
+do
 case $option in
   1 ) echo "You entered one, open a file repository"
-  ;;
+
+  echo "Option 1) Edit a file"
+  echo "Option 2) Create a new file in the repository"
+  echo "Option 3) Delete a file"
+  echo "Option 0) Quit"
+  read -p "Please enter an option: " choice
+
+  while true
+  do
+  case $choice in
+
+    1) echo"You entered one, edit a file."
+      editFile
+      ;;
+    2) echo"You entered two, what would you like to call the file?"
+      createFile
+      ;;
+    3) echo"You entered three, which file would you like to delete?"
+      deleteFile
+      ;;
+    0 ) echo "Goodbye!"
+    break
+    ;;
+  done
   2 ) echo "You entered two, create a new file repository:"
   ;;
   0 ) echo "Goodbye!"
+  break
   ;;
   *) echo "You entered a number not between 1 and 3."
 esac
+done
 
 #automatically listing the contents of
 #the file repository currently in use
@@ -53,3 +82,6 @@ fi
 
 #use the 'sort' command to filter the file contents. try 'help' to
 #find any versions that may be relevant.
+
+#Zip a repository
+zip -r "$SelectedRepoName.zip" $selectedRepo
