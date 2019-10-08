@@ -84,4 +84,7 @@ fi
 #find any versions that may be relevant.
 
 #Zip a repository
-zip -r "$SelectedRepoName.zip" $selectedRepo
+zipRepo(){
+  echo "Please ensure you are located in the correct directory before zipping"
+  zip -r "$SelectedRepoName.zip" $selectedRepo
+}
