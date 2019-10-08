@@ -34,13 +34,15 @@ case $option in
     0 ) echo "Goodbye!"
     break
     ;;
+    *) echo "You entetered a number outside of the available options."
+  esac
   done
   2 ) echo "You entered two, create a new file repository:"
   ;;
   0 ) echo "Goodbye!"
   break
   ;;
-  *) echo "You entered a number not between 1 and 3."
+  *) echo "You entetered a number outside of the available options."
 esac
 done
 
