@@ -2,9 +2,10 @@
 file="NULL"; 
 back=false;
 option=null;
+selectedRepo=""
 ##Make a menu ask whether they want to edit,create,delete or exit text file 
 clear
-ls
+ls -l
 
 echo "Option 1) Edit an existing text file "
 echo "Option 2) Create a new Text file"
@@ -13,40 +14,56 @@ echo "Option 0) Exit "
 read -p "Please enter an option: " option
 
 
-case $option in
-  1 ) echo "You entered one, open a file repository"
-    ls
-   ## while !back do:
-    echo "What file would you like to edit"
+
+editFile(){
+echo "What file would you like to edit"
+    ls 
     read file
     if [ -f $file ] ;then
-
-	   chmod u+w "$file" # Only changes user i can't seem  to change the other people permissions
-	    vi $file ## or allow user to type stuff cat show and then sed "text"
-	    ## cp current location to backup location ## Back up ????? create copy and move to .backup ???  
-	     chmod u-w "$file" ## Needs checking
-       chmod u+r "$file" ## Change it back to read only chmod 222 or the 0ther ones
+	chmod 244 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work 
+	vi $file ## or allow user to type stuff cat show and then sed "text"
+      
+      chmod 444 "$file" ## Change it back to read only chmod 222 or the 0ther ones
 	    ##// Log changes in a log file DUnno ??????
-	    ##back=true;
+          ls -l
     else
    	    echo "The file '$file' in not found"
+          echo "Sending back to menu"  
     fi
+}
 
-if [ $file == "0"] ;then
-    back=true;
-fi 
-##;done
+createFile(){
+    read file 
+    ## Chmod repostiry  
+    touch $file  
+}
+
+deleteFile(){
+      read file
+      if [ -f $file ] ;then
+            rm $file
+            echo "You have deleted the file '$file'"
+      else
+             echo "The file '$file' in not found"
+             echo "Sending back to menu"  
+      fi
+      #loop menu      
+}
+
+
+case $option in
+  1 ) echo "You entered one, open a file repository"
+      editFile
  ;;
   2 ) echo "You entered two, What would you like to call the file:"        
-        read file 
-        touch $file 
+      createFile
   ;;
   3 ) echo "You entered three, Which file would you like to delete"
-        read file
-        rm $file
+      deleteFile
   ;;
   *) echo "You entered a number not between 1 and 3."
 esac
+
 ##Maybe move while for whole thing instead of 1
 
 
