@@ -46,6 +46,19 @@ case $option in
 esac
 done
 
+#Zip a repository
+zipRepo(){
+  echo "Please ensure you are located in the correct directory before zipping"
+  zip -r "$SelectedRepoName.zip" $selectedRepo
+}
+
+
+
+
+
+
+
+
 #automatically listing the contents of
 #the file repository currently in use
 
@@ -84,9 +97,3 @@ fi
 
 #use the 'sort' command to filter the file contents. try 'help' to
 #find any versions that may be relevant.
-
-#Zip a repository
-zipRepo(){
-  echo "Please ensure you are located in the correct directory before zipping"
-  zip -r "$SelectedRepoName.zip" $selectedRepo
-}
