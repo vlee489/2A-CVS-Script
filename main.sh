@@ -3,6 +3,7 @@ file="NULL";
 back=false;
 option=null;
 selectedRepo=""
+message=""
 ##Make a menu ask whether they want to edit,create,delete or exit text file 
 clear
 ls -l
@@ -22,9 +23,13 @@ echo "What file would you like to edit"
     if [ -f $file ] ;then
 	chmod 244 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work 
 	vi $file ## or allow user to type stuff cat show and then sed "text"
-      
+    read -p  "Please enter your commit message " message
+    echo $(date +%s)~$file~$message  >> log.txt
+
+
       chmod 444 "$file" ## Change it back to read only chmod 222 or the 0ther ones
-	    ##// Log changes in a log file DUnno ??????
+          
+	    
           ls -l
     else
    	    echo "The file '$file' in not found"
@@ -36,6 +41,7 @@ createFile(){
     read file 
     ## Chmod repostiry  
     touch $file  
+    chmod 444 "$file"
 }
 
 deleteFile(){
@@ -47,7 +53,7 @@ deleteFile(){
              echo "The file '$file' in not found"
              echo "Sending back to menu"  
       fi
-      #loop menu      
+           
 }
 
 
