@@ -166,7 +166,23 @@ recoverRepository(){
   fi
 }
 
-autobBackupRemoval
-makeRepo
-deleteRepo
-recoverRepository
+
+listCheckoutfiles(){
+  # Places ls output for file
+  echo -e "$(ls -lR)" >> "$configFolder/.temptxt.txt"
+  echo "Files currently checkout to you"
+  # reads file line by line
+  while IFS= read -r line
+  do
+    line="${line//+([  ])/ }" # turns double spaces to single spaces
+    IFS=' ' read -ra filterLine <<< "$line"
+    # Checks if the file is assigned to the user and if they have write perms
+    if [ "${filterLine[0]}" = "-rwxrwxrwx" ] && [ "${filterLine[2]}" = "$USER" ]; then
+      echo "${filterLine[8]} : ${filterLine[2]}"
+    fi
+  done <"$configFolder/.temptxt.txt"
+  # Remove txt file
+  rm -rf "$configFolder/.temptxt.txt"
+}
+
+listCheckoutfiles
