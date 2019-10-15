@@ -7,6 +7,7 @@ option=null;
 selectedRepo=""
 selectedRepoName=""
 noRepo=false
+baseFolder=$(pwd)
 
 #Zip a repository
 zipRepo(){
@@ -75,6 +76,7 @@ openRepo(){
       valid=true
     else
       echo "Invalid Choice!"
+      selectedRepo=""
     fi
   done
 }
@@ -161,7 +163,7 @@ recoverRepository(){
       rm -rf "$(pwd)/$configFolder/"removedRepo.txt.bak""
       chmod 551 $repoFolder
       # Adds instance back to txt file holding active repos
-      echo "\"$recoveryDir/$recoveryName/\"~$recoveryName" >> "$configFolder/"repos.txt""
+      echo "\"$baseFolder/$repoFolder/$recoveryName/\"~$recoveryName" >> "$configFolder/"repos.txt""
       # Removes backup repo folder, that has time stamp
       rm -rf $recoveryDir
     else
@@ -193,33 +195,37 @@ listCheckoutfiles(){
 }
 
 editFile(){
-echo "What file would you like to edit"
-    ls
-    read file
-    if [ -f $file ] ;then
-	chmod 244 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
-	vi $file ## or allow user to type stuff cat show and then sed "text"
-
-      chmod 444 "$file" ## Change it back to read only chmod 222 or the 0ther ones
+  echo "What file would you like to edit"
+  ls
+  read file
+  if [ -f $file ] ;then
+	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
+	   vi $file ## or allow user to type stuff cat show and then sed "text"
+     chmod 555 "$file" ## Change it back to read only chmod 222 or the 0ther ones
 	    ##// Log changes in a log file DUnno ??????
-          ls -l
-    else
-   	    echo "The file '$file' in not found"
-          echo "Sending back to menu"
-    fi
+  else
+   	  echo "The file '$file' in not found"
+      echo "Sending back to menu"
+  fi
 }
 
 createFile(){
+    chmod 777 $selectedRepo
     read file
     ## Chmod repostiry
     touch $file
+    chmod 555 $selectedRepo
+    chmod 555 "$selectedRepo/$file"
+
 }
 
 deleteFile(){
       read file
       if [ -f $file ] ;then
+            chmod -R 777 $selectedRepo
             rm $file
             echo "You have deleted the file '$file'"
+            chmod -R 555 $selectedRepo
       else
              echo "The file '$file' in not found"
              echo "Sending back to menu"
@@ -227,52 +233,63 @@ deleteFile(){
       #loop menu
 }
 
+repoFunctionMenu(){
+if [ $noRepo == false ];then
+  while true
+  do
+  echo "Option 1) Edit a file"
+  echo "Option 2) Create a new file in the repository"
+  echo "Option 3) Delete a file"
+  echo "Option 0) Quit"
+  read -p "Please enter an option: " choice
+  case $choice in
+    1) echo "You entered one, edit a file."
+      editFile
+      ;;
+    2) echo "You entered two, what would you like to call the file?"
+      createFile
+      ;;
+    3) echo "You entered three, which file would you like to delete?"
+      deleteFile
+      ;;
+    0 ) echo "Goodbye!"
+    cd $baseFolder
+    break
+    ;;
+    *) echo "You entetered a number outside of the available options."
+  esac
+  done
+else
+  echo "No Repository Selected"
+  cd $baseFolder
+fi
+}
+
 # Menu
+autobBackupRemoval
+while true
+do
 echo "Option 1) Open a file repository"
 echo "Option 2) Create a new file repository"
 echo "Option 3) Delete a repository"
 echo "Option 4) Recover Deleted Repository"
 echo "Option 0) Quit"
-
-
-while true
-do
 read -p "Please enter an option: " option
 case $option in
   1 ) echo "You entered one, open a file repository"
   openRepo
   cd "$selectedRepo"
   echo $(pwd)
-  echo "Option 1) Edit a file"
-  echo "Option 2) Create a new file in the repository"
-  echo "Option 3) Delete a file"
-  echo "Option 0) Quit"
-  read -p "Please enter an option: " choice
-
-  while true
-  do
-  case $choice in
-    1) echo"You entered one, edit a file."
-      editFile
-      ;;
-    2) echo"You entered two, what would you like to call the file?"
-      createFile
-      ;;
-    3) echo"You entered three, which file would you like to delete?"
-      deleteFile
-      ;;
-    4) echo"You entered five, recover Deleted repo"
-      recoverRepository
-      ;;
-    0 ) echo "Goodbye!"
-    break
-    ;;
-    *) echo "You entetered a number outside of the available options."
-  esac
-  done
+  repoFunctionMenu
   ;;
   2 ) echo "You entered two, create a new file repository:"
     makeRepo
+  ;;
+  3 ) echo "You entered Three, Delete a file Repository"
+    deleteRepo
+  ;;
+  4 ) echo "You entered Four, Recover a Repository"
+    recoverRepository
   ;;
   0 ) echo "Goodbye!"
   break
