@@ -29,6 +29,7 @@ makeRepo(){
         # make repo and set perms
         chmod 777 $repoFolder
         mkdir $repoFolder/$newRepoName
+        touch "$repoFolder/$newRepoName/.log.txt"
         chmod -R 551 $repoFolder/$newRepoName
         chmod 551 $repoFolder
         valid=true
@@ -178,7 +179,7 @@ recoverRepository(){
 
 listCheckoutfiles(){
   # Places ls output for file
-  echo -e "$(ls -lR)" >> "$configFolder/.temptxt.txt"
+  echo -e "$(ls -lR)" >> "$baseFolder/$configFolder/.temptxt.txt"
   echo "Files currently checkout to you"
   # reads file line by line
   while IFS= read -r line
@@ -189,37 +190,47 @@ listCheckoutfiles(){
     if [ "${filterLine[0]}" = "-rwxrwxrwx" ] && [ "${filterLine[2]}" = "$USER" ]; then
       echo "${filterLine[8]} : ${filterLine[2]}"
     fi
-  done <"$configFolder/.temptxt.txt"
+  done <"$baseFolder/$configFolder/.temptxt.txt"
   # Remove txt file
-  rm -rf "$configFolder/.temptxt.txt"
+  rm -rf "$baseFolder/$configFolder/.temptxt.txt"
 }
 
 editFile(){
-  echo "What file would you like to edit"
-  ls
-  read file
-  if [ -f $file ] ;then
-	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
-	   vi $file ## or allow user to type stuff cat show and then sed "text"
-     chmod 555 "$file" ## Change it back to read only chmod 222 or the 0ther ones
-	    ##// Log changes in a log file DUnno ??????
+  if [ "$(ls $selectedRepo)" ]; then
+    echo "What file would you like to edit"
+    ls
+    read file
+    if [ -f $file ] ;then
+  	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
+  	   vi $file ## or allow user to type stuff cat show and then sed "text"
+       chmod 555 "$file" ## Change it back to read only chmod 222 or the 0ther ones
+       read -p  "Please enter your commit message " message
+       chmod 777 ".log.txt"
+       echo "$(date +%s)~$file~$message"  >> ".log.txt"
+       chmod 555 ".log.txt"
+    else
+     	  echo "The file '$file' in not found"
+        echo "Sending back to menu"
+    fi
   else
-   	  echo "The file '$file' in not found"
-      echo "Sending back to menu"
+    echo "empty repo"
   fi
 }
 
 createFile(){
+  read file
+  if [ -f $file ] ; then
+    echo "file already exists"
+  else
     chmod 777 $selectedRepo
-    read file
-    ## Chmod repostiry
     touch $file
     chmod 555 $selectedRepo
     chmod 555 "$selectedRepo/$file"
-
+  fi
 }
 
 deleteFile(){
+      ls
       read file
       if [ -f $file ] ;then
             chmod -R 777 $selectedRepo
@@ -233,6 +244,21 @@ deleteFile(){
       #loop menu
 }
 
+displayLog(){
+  if [ -f ".log.txt" ]; then
+    clear
+    while IFS= read -r line
+    do
+      IFS='~' read -ra logtxt <<< "$line"
+      echo "$(date -r ${logtxt[0]}) | ${logtxt[1]} | ${logtxt[2]}"
+    done <".log.txt"
+  fi
+}
+
+recoverFile(){
+  echo "In Making"
+}
+
 repoFunctionMenu(){
 if [ $noRepo == false ];then
   while true
@@ -240,6 +266,9 @@ if [ $noRepo == false ];then
   echo "Option 1) Edit a file"
   echo "Option 2) Create a new file in the repository"
   echo "Option 3) Delete a file"
+  echo "Option 4) List files checked out to user"
+  echo "Option 5) Display Log Files"
+  echo "Option 6) Recover Files"
   echo "Option 0) Quit"
   read -p "Please enter an option: " choice
   case $choice in
@@ -252,6 +281,15 @@ if [ $noRepo == false ];then
     3) echo "You entered three, which file would you like to delete?"
       deleteFile
       ;;
+    4 ) echo "You entered four, Displaying files checkout to user"
+      listCheckoutfiles
+    ;;
+    5 ) echo "You entered five, Display Log file"
+      displayLog
+    ;;
+    6 ) echo "You entered six, Recover file"
+      recoverFile
+    ;;
     0 ) echo "Goodbye!"
     cd $baseFolder
     break
