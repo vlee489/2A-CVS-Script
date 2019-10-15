@@ -259,6 +259,14 @@ recoverFile(){
   echo "In Making"
 }
 
+checkOutFile(){
+  echo "Josh over here!"
+}
+
+checkInFile(){
+  echo "In Making"
+}
+
 repoFunctionMenu(){
 if [ $noRepo == false ];then
   while true
