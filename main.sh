@@ -1,17 +1,248 @@
 #!/usr/bin/env bash
+file="NULL";
+repoFolder="Repositories"
+configFolder=".CVSConfigs"
+back=false;
+option=null;
+selectedRepo=""
+selectedRepoName=""
+noRepo=false
+
+#Zip a repository
+zipRepo(){
+  echo "Please ensure you are located in the correct directory before zipping"
+  zip -r "$SelectedRepoName.zip" $selectedRepo
+}
+
+makeRepo(){
+  echo "We're going to walk you through making a new repo"
+  local newRepoName=""
+  local newRepoDir=""
+  local valid=false
+  while [ $valid == false ]; do
+    read -p "Enter name of the new repo: " newRepoName
+    if [ -d "$repoFolder/$newRepoName" ]; then
+      echo "Invalid repo name"
+      echo "Folder likely already exists"
+    else
+        # make repo and set perms
+        chmod 777 $repoFolder
+        mkdir $repoFolder/$newRepoName
+        chmod -R 551 $repoFolder/$newRepoName
+        chmod 551 $repoFolder
+        valid=true
+        newRepoDir="\"$PWD/$repoFolder/$newRepoName\""
+        echo "$newRepoDir~$newRepoName" >> "$configFolder/"repos.txt""
+        echo "New Repo Added"
+        selectedRepo="$PWD/$repoFolder/$newRepoName"
+    fi
+    done
+}
+
+openRepo(){
+  valid=false
+  if [ -s "$configFolder/"repos.txt"" ]; then
+    echo "List of Repositories"
+    echo "===================="
+  else
+    echo "No Repo Available"
+    noRepo=true
+  fi
+  # While loops if a valid choice hasn't been given and the repo txt file has repos to show
+  while [ $valid == false ] && [ $noRepo == false ]; do
+    local optionNumbers=0
+    userChoice=""
+    # following while loop shows available options from the txt file
+    # IFS is the internal field separator and is used to split strings in
+    # bash, here we use it to split it per line
+    while IFS= read -r line
+    do
+      optionNumbers=$((optionNumbers + 1))
+      IFS='~' read -ra repoName <<< "$line"
+      echo "$optionNumbers) ${repoName[1]}"
+    done <"$configFolder/"repos.txt""
+    optionNumbers=$((optionNumbers + 1))
+    read -p "Enter number to open repo: " userChoice
+    # if user choice is valid
+    if [ $userChoice -lt $optionNumbers ] && [ $userChoice -gt 0 ]; then
+      # get x line from txt file
+      selectedOption=$(sed "${userChoice}q;d" "$configFolder/"repos.txt"")
+      # Split using delimiter
+      IFS='~' read -ra repoName <<< "$selectedOption"
+      echo "You've selected the Repository: ${repoName[1]}"
+      # Place repo dir in variable while removing speech marks from either end of string
+      selectedRepo=$(sed -e 's/^"//' -e 's/"$//' <<<"${repoName[0]}")
+      valid=true
+    else
+      echo "Invalid Choice!"
+    fi
+  done
+}
+
+deleteRepo(){
+  echo "Please select a Repository to delete!"
+  openRepo # Used to select repo
+  if [ $noRepo == false ]; then
+    echo "Are you sure you want to delete $selectedRepoName?"
+    read -p "yes / no: " confirm
+    if [ $confirm == "yes" ] || [ $confirm == "y" ]; then
+      deleteTime=$(date +%s) # Gets current time
+      # Make repo to store backup
+      mkdir "$(pwd)/$configFolder/.repoRecovery/$deleteTime"
+      chmod 777 $repoFolder
+      chmod -R 777 $selectedRepo
+      # Move delted repo to backup
+      mv $selectedRepo "$configFolder/.repoRecovery/$deleteTime"
+      # Add deleted repo to the txt file containing removed repos in backup folder
+      echo "\"$(pwd)/$configFolder/".repoRecovery"/$deleteTime\"~$deleteTime~${repoName[1]}" >> "$configFolder/"removedRepo.txt""
+      #Remove repo for repos.txt
+      sed -i.bak "${userChoice}d" "$(pwd)/$configFolder/"repos.txt""
+      rm -rf "$(pwd)/$configFolder/"repos.txt.bak""
+      chmod -R 551 "$configFolder/.repoRecovery/$deleteTime"
+      chmod 551 $repoFolder
+      echo "Deleted Repository: ${repoName[1]}"
+    else
+      echo "Aborting Repository deletion"
+    fi
+  fi
+}
+
+# actually Deletes any Repository backups older than a week
+# Used to automatically remove backups at start of script
+autobBackupRemoval(){
+  if [ -s "$configFolder/"removedRepo.txt"" ]; then # Checks if txt file has txt
+    local counter=0
+    # Read each line for txt file
+    while IFS= read -r line
+    do
+      counter=$((counter + 1))
+      IFS='~' read -ra repoCheck <<< "$line"
+      #Data of repo deletion plus 7 days
+      checktime=$((${repoCheck[1]}+604800))
+      deleteTime=$(date +%s)
+      # If repo backup is older than 7 days, it deletes the repo
+      if (( $checktime < $deleteTime )); then
+        chmod -R 777 $(sed -e 's/^"//' -e 's/"$//' <<<"${repoCheck[0]}")
+        rm -rf $(sed -e 's/^"//' -e 's/"$//' <<<"${repoCheck[0]}")
+        sed -i.bak "${counter}d" "$(pwd)/$configFolder/"removedRepo.txt""
+        rm -rf "$(pwd)/$configFolder/"removedRepo.txt.bak""
+      fi
+    done <"$configFolder/"removedRepo.txt""
+  fi
+}
+
+recoverRepository(){
+  if [ -s "$configFolder/"removedRepo.txt"" ]; then # Checks if txt file has txt
+    #Like the openRepo function, it opens the txt file containing the backedup repos
+    # and then displays them to allow the user to choose wich one to recover
+    local optionNumbers=0
+    local userOption
+    while IFS= read -r line
+    do
+      optionNumbers=$((optionNumbers + 1))
+      IFS='~' read -ra repoName <<< "$line"
+      echo "$optionNumbers) ${repoName[2]}"
+    done <"$configFolder/"removedRepo.txt""
+    optionNumbers=$((optionNumbers + 1))
+    read -p "Enter number of the repo you want to recover: " userOption
+    if [ $userOption -lt $optionNumbers ] && [ $userOption -gt 0 ]; then
+      chmod 777 $repoFolder
+      local selectedRecover=$(sed "${userOption}q;d" "$configFolder/"removedRepo.txt"")
+      IFS='~' read -ra recoveryArray <<< "$selectedRecover"
+      local recoveryName="${recoveryArray[2]}"
+      echo "Recovering: $recoveryName"
+      local recoveryDir=$(sed -e 's/^"//' -e 's/"$//' <<<"${recoveryArray[0]}")
+      #Copies repo
+      chmod -R 777 $recoveryDir
+      mv "$recoveryDir/$recoveryName/" "$repoFolder/$recoveryName/"
+      chmod -R 551 "$repoFolder/$recoveryName"
+      # remove instance for txt holding backed up repos
+      sed -i.bak "${userOption}d" "$configFolder/"removedRepo.txt""
+      rm -rf "$(pwd)/$configFolder/"removedRepo.txt.bak""
+      chmod 551 $repoFolder
+      # Adds instance back to txt file holding active repos
+      echo "\"$recoveryDir/$recoveryName/\"~$recoveryName" >> "$configFolder/"repos.txt""
+      # Removes backup repo folder, that has time stamp
+      rm -rf $recoveryDir
+    else
+      echo"Invalid Choice"
+    fi
+  else
+    echo "No Repository can currently be recovered!"
+    echo "Note: backups are removed after one week"
+  fi
+}
+
+
+listCheckoutfiles(){
+  # Places ls output for file
+  echo -e "$(ls -lR)" >> "$configFolder/.temptxt.txt"
+  echo "Files currently checkout to you"
+  # reads file line by line
+  while IFS= read -r line
+  do
+    line="${line//+([  ])/ }" # turns double spaces to single spaces
+    IFS=' ' read -ra filterLine <<< "$line"
+    # Checks if the file is assigned to the user and if they have write perms
+    if [ "${filterLine[0]}" = "-rwxrwxrwx" ] && [ "${filterLine[2]}" = "$USER" ]; then
+      echo "${filterLine[8]} : ${filterLine[2]}"
+    fi
+  done <"$configFolder/.temptxt.txt"
+  # Remove txt file
+  rm -rf "$configFolder/.temptxt.txt"
+}
+
+editFile(){
+echo "What file would you like to edit"
+    ls
+    read file
+    if [ -f $file ] ;then
+	chmod 244 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
+	vi $file ## or allow user to type stuff cat show and then sed "text"
+
+      chmod 444 "$file" ## Change it back to read only chmod 222 or the 0ther ones
+	    ##// Log changes in a log file DUnno ??????
+          ls -l
+    else
+   	    echo "The file '$file' in not found"
+          echo "Sending back to menu"
+    fi
+}
+
+createFile(){
+    read file
+    ## Chmod repostiry
+    touch $file
+}
+
+deleteFile(){
+      read file
+      if [ -f $file ] ;then
+            rm $file
+            echo "You have deleted the file '$file'"
+      else
+             echo "The file '$file' in not found"
+             echo "Sending back to menu"
+      fi
+      #loop menu
+}
 
 # Menu
 echo "Option 1) Open a file repository"
 echo "Option 2) Create a new file repository"
+echo "Option 3) Delete a repository"
+echo "Option 4) Recover Deleted Repository"
 echo "Option 0) Quit"
-read -p "Please enter an option: " option
 
 
 while true
 do
+read -p "Please enter an option: " option
 case $option in
   1 ) echo "You entered one, open a file repository"
-
+  openRepo
+  cd "$selectedRepo"
+  echo $(pwd)
   echo "Option 1) Edit a file"
   echo "Option 2) Create a new file in the repository"
   echo "Option 3) Delete a file"
@@ -21,7 +252,6 @@ case $option in
   while true
   do
   case $choice in
-
     1) echo"You entered one, edit a file."
       editFile
       ;;
@@ -31,13 +261,18 @@ case $option in
     3) echo"You entered three, which file would you like to delete?"
       deleteFile
       ;;
+    4) echo"You entered five, recover Deleted repo"
+      recoverRepository
+      ;;
     0 ) echo "Goodbye!"
     break
     ;;
     *) echo "You entetered a number outside of the available options."
   esac
   done
+  ;;
   2 ) echo "You entered two, create a new file repository:"
+    makeRepo
   ;;
   0 ) echo "Goodbye!"
   break
@@ -45,55 +280,3 @@ case $option in
   *) echo "You entetered a number outside of the available options."
 esac
 done
-
-#Zip a repository
-zipRepo(){
-  echo "Please ensure you are located in the correct directory before zipping"
-  zip -r "$SelectedRepoName.zip" $selectedRepo
-}
-
-
-
-
-
-
-
-
-#automatically listing the contents of
-#the file repository currently in use
-
-#read the permissions (file type (1), user persmissions(3),
-#group permissions (3), other permissions(3), lecture 7 notes)
-ls -l
-
-#pipe w's from permissions (use space as delimeter)
-#need to use a while loop to ensure every single line is read in the file
-mkfifo mypipe
-#Where 2 is the field number of the space-delimited field you want.
-cut -d '' -f 2
-
-while read line
-do
-  echo "LINE: $line"
-done < /dev/stdin
-
-
-#using a pipe:
-STDIN
-STDOUT
-
-# into recursive if statement
-if[permission is assigned to user running the script then print, commands]
-then
-  #commands
-  echo ""
-else
-  echo "No permissions were found"
-fi
-
-
-#cat? is only good for shorter files use the 'less' command
-#(allows scrolling up and down, press q to exit to command line)
-
-#use the 'sort' command to filter the file contents. try 'help' to
-#find any versions that may be relevant.
