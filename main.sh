@@ -4,15 +4,21 @@ repoFolder="Repositories"
 configFolder=".CVSConfigs"
 back=false;
 option=null;
+# Gives absolute path of selected repo
 selectedRepo=""
+# Gives name of the repo selected
 selectedRepoName=""
+# Says if repo exist or not
 noRepo=false
+# base path to use
 baseFolder=$(pwd)
 
 #Zip a repository
 zipRepo(){
-  echo "Please ensure you are located in the correct directory before zipping"
-  zip -r "$SelectedRepoName.zip" $selectedRepo
+  if [ $noRepo == false ] && [ $selectedRepo != "" ]; then
+    echo "Please ensure you are located in the correct directory before zipping"
+    zip -r "$SelectedRepoName.zip" $selectedRepo
+  fi
 }
 
 makeRepo(){
@@ -370,6 +376,7 @@ echo "Option 1) Open a file repository"
 echo "Option 2) Create a new file repository"
 echo "Option 3) Delete a repository"
 echo "Option 4) Recover Deleted Repository"
+echo "Option 5) Zip Repository"
 echo "Option 0) Quit"
 read -p "Please enter an option: " option
 case $option in
@@ -387,6 +394,10 @@ case $option in
   ;;
   4 ) echo "You entered Four, Recover a Repository"
     recoverRepository
+  ;;
+  5 ) echo "You entered Five, Zip Repository"
+    openRepo
+    zipRepo
   ;;
   0 ) echo "Goodbye!"
   break
