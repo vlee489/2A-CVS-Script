@@ -259,8 +259,21 @@ recoverFile(){
   echo "In Making"
 }
 
+
 checkOutFile(){
-  echo "Josh over here!"
+  if [ "$(ls $selectedRepo)" ]; then
+    echo "What file would you like to checkout"
+    ls
+    read file
+    if [ -f $file ] ;then
+  	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
+    else
+     	  echo "The file '$file' in not found"
+        echo "Sending back to menu"
+    fi
+  else
+    echo "empty repo"
+  fi
 }
 
 checkInFile(){
