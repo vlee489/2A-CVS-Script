@@ -7,7 +7,7 @@ option=null;
 selectedRepo=""
 selectedRepoName=""
 noRepo=false
-baseFolder=$(eval echo ~$USER)
+baseFolder=$(pwd)
 
 #Zip a repository
 zipRepo(){
@@ -282,16 +282,19 @@ checkInFile(){
   echo -e "$(ls -lR)" >> "$baseFolder/$configFolder/.temptxt.txt"
   echo "Checking in the following files"
   # reads file line by line
+  # goes through each line of the ls
   while IFS= read -r line
   do
     line="${line//+([  ])/ }" # turns double spaces to single spaces
     IFS=' ' read -ra filterLine <<< "$line"
-    # Checks if the file is assigned to the user and if they have write perms
+    # if perms are the same as the ones for writing perms then we assign we then show the file and set the counter to 1
     if [ "${filterLine[0]}" = "-rwxrwxrwx" ] || [ "${filterLine[0]}" = "-rwxrwxrwx@" ]; then
       echo "${filterLine[8]} : ${filterLine[2]}"
       count=1
     fi
   done <"$baseFolder/$configFolder/.temptxt.txt"
+
+  #If the counter is equal to 1
   if ($count -eq 1); then
     read -p  "Please enter your commit message " message
     chmod 777 ".log.txt"
@@ -301,7 +304,9 @@ checkInFile(){
       IFS=' ' read -ra filterLine <<< "$line"
       # Checks if the file is assigned to the user and if they have write perms
       if [ "${filterLine[0]}" = "-rwxrwxrwx" ] || [ "${filterLine[0]}" = "-rwxrwxrwx@" ]; then
+        #Log in file to log
         echo "$(date +%s)~${filterLine[8]}~$message"  >> ".log.txt"
+        # lock the file
         chmod 555 "${filterLine[8]}"
       fi
     done <"$baseFolder/$configFolder/.temptxt.txt"
