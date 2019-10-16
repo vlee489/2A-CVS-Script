@@ -7,7 +7,7 @@ option=null;
 selectedRepo=""
 selectedRepoName=""
 noRepo=false
-baseFolder=$(pwd)
+baseFolder=$(eval echo ~$USER)
 
 #Zip a repository
 zipRepo(){
