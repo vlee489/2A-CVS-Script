@@ -20,6 +20,9 @@ if [ $confirm == "yes" ] || [ $confirm == "y" ]; then
     echo "Moving main CVS file"
     mv "$relativePath/cvs.sh" "$homeDir/cvs.sh"
     chmod 555 "$homeDir/cvs.sh"
+    clear
+    echo "Install complete!"
+    echo "Use command ./cvs.sh from your home dir"
   else
     echo "Unable to find cvs.sh file to install!"
   fi
