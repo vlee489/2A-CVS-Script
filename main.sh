@@ -4,21 +4,15 @@ repoFolder="Repositories"
 configFolder=".CVSConfigs"
 back=false;
 option=null;
-# Gives absolute path of selected repo
 selectedRepo=""
-# Gives name of the repo selected
 selectedRepoName=""
-# Says if repo exist or not
 noRepo=false
-# base path to use
 baseFolder=$(pwd)
 
 #Zip a repository
 zipRepo(){
-  if [ $noRepo == false ] && [ $selectedRepo != "" ]; then
-    echo "Please ensure you are located in the correct directory before zipping"
-    zip -r "$SelectedRepoName.zip" $selectedRepo
-  fi
+  echo "Please ensure you are located in the correct directory before zipping"
+  zip -r "$SelectedRepoName.zip" $selectedRepo
 }
 
 makeRepo(){
@@ -36,6 +30,7 @@ makeRepo(){
         chmod 777 $repoFolder
         mkdir $repoFolder/$newRepoName
         touch "$repoFolder/$newRepoName/.log.txt"
+        mkdir "$repoFolder/$newRepoName/.backup"
         chmod -R 551 $repoFolder/$newRepoName
         chmod 551 $repoFolder
         valid=true
@@ -203,9 +198,18 @@ listCheckoutfiles(){
 
 editFile(){
   if [ "$(ls $selectedRepo)" ]; then
-    echo "What file would you like to edit"
-    ls
+    echo "What file would you like to edit" 
+   
+    
     read file
+       chmod 777 "$selectedRepo/.backup"  
+    cp $file "$selectedRepo/.backup/$(date +%s)~$file" 
+    cd .backup
+    chmod 555 ".backup"
+    cd ..
+    
+ 
+    chmod 555 "$selectedRepo/.backup" 
     if [ -f $file ] ;then
   	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
   	   vi $file ## or allow user to type stuff cat show and then sed "text"
@@ -213,7 +217,7 @@ editFile(){
        read -p  "Please enter your commit message " message
        chmod 777 ".log.txt"
        echo "$(date +%s)~$file~$message"  >> ".log.txt"
-       chmod 555 ".log.txt"
+       chmod 555 ".log.txt "
     else
      	  echo "The file '$file' in not found"
         echo "Sending back to menu"
@@ -261,67 +265,48 @@ displayLog(){
   fi
 }
 
+existingRecover(){
+ls 
+
+echo"What file would you recover" 
+
+read $file
+
+IFS='~' read -ra logtxt <<< "$line"
+
+}
+
+backUpOld(){
+  clear
+  backupsDir="$selectedRepo/.backup/*"
+  for file in $backupsDir; do
+    echo $file
+  done
+}
+
 recoverFile(){
-  echo "In Making"
-}
-
-
-checkOutFile(){
-  if [ "$(ls $selectedRepo)" ]; then
-    echo "What file would you like to checkout"
-    ls
-    read file
-    if [ -f $file ] ;then
-  	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
-    else
-     	  echo "The file '$file' in not found"
-        echo "Sending back to menu"
-    fi
-  else
-    echo "empty repo"
-  fi
-}
-
-checkInFile(){
-  local count=0
-  # Places ls output for file
-  echo -e "$(ls -lR)" >> "$baseFolder/$configFolder/.temptxt.txt"
-  echo "Checking in the following files"
-  # reads file line by line
-  # goes through each line of the ls
-  while IFS= read -r line
+while true
   do
-    line="${line//+([  ])/ }" # turns double spaces to single spaces
-    IFS=' ' read -ra filterLine <<< "$line"
-    # if perms are the same as the ones for writing perms then we assign we then show the file and set the counter to 1
-    if [ "${filterLine[0]}" = "-rwxrwxrwx" ] || [ "${filterLine[0]}" = "-rwxrwxrwx@" ]; then
-      echo "${filterLine[8]} : ${filterLine[2]}"
-      count=1
-    fi
-  done <"$baseFolder/$configFolder/.temptxt.txt"
-
-  #If the counter is equal to 1
-  if ($count -eq 1); then
-    read -p  "Please enter your commit message " message
-    chmod 777 ".log.txt"
-    while IFS= read -r line
-    do
-      line="${line//+([  ])/ }" # turns double spaces to single spaces
-      IFS=' ' read -ra filterLine <<< "$line"
-      # Checks if the file is assigned to the user and if they have write perms
-      if [ "${filterLine[0]}" = "-rwxrwxrwx" ] || [ "${filterLine[0]}" = "-rwxrwxrwx@" ]; then
-        #Log in file to log
-        echo "$(date +%s)~${filterLine[8]}~$message"  >> ".log.txt"
-        # lock the file
-        chmod 555 "${filterLine[8]}"
-      fi
-    done <"$baseFolder/$configFolder/.temptxt.txt"
-    chmod 555 ".log.txt"
-  else
-    echo "No files to check in"
-    echo "Exciting checkin"
-  fi
-  rm -rf "$baseFolder/$configFolder/.temptxt.txt"
+  echo "Option 1) Recover an existing "
+  echo "Option 2) recover an old file "
+  echo "Option 0) back"
+  read -p "Please enter an option: " choice
+  case $choice in
+    1) echo "You entered one, Recover an existing file."
+          existingRecover
+          break;
+      ;;
+    2) echo "You entered two, what would you like to call the file?"
+      backUpOld
+      break;
+      ;;
+    0 ) echo "Goodbye!"
+   
+    break
+    ;;
+    *) echo "You entetered a number outside of the available options."
+  esac
+  done
 }
 
 repoFunctionMenu(){
@@ -376,7 +361,6 @@ echo "Option 1) Open a file repository"
 echo "Option 2) Create a new file repository"
 echo "Option 3) Delete a repository"
 echo "Option 4) Recover Deleted Repository"
-echo "Option 5) Zip Repository"
 echo "Option 0) Quit"
 read -p "Please enter an option: " option
 case $option in
@@ -394,10 +378,6 @@ case $option in
   ;;
   4 ) echo "You entered Four, Recover a Repository"
     recoverRepository
-  ;;
-  5 ) echo "You entered Five, Zip Repository"
-    openRepo
-    zipRepo
   ;;
   0 ) echo "Goodbye!"
   break
