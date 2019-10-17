@@ -2,6 +2,7 @@
 homeDir=$(eval echo ~$USER)
 version=0.0.1
 relativePath=$(pwd)
+deployableLink="https://raw.githubusercontent.com/vlee489/2A-CVS-Script/deployabl/main.sh"
 
 echo "$homeDir"
 
