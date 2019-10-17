@@ -256,7 +256,7 @@ displayLog(){
     while IFS= read -r line
     do
       IFS='~' read -ra logtxt <<< "$line"
-      echo "$(date -r ${logtxt[0]}) | ${logtxt[1]} | ${logtxt[2]}"
+      echo "$(date -d @${logtxt[0]}) | ${logtxt[1]} | ${logtxt[2]}"
     done <".log.txt"
   fi
 }
