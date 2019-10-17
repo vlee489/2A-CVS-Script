@@ -116,6 +116,8 @@ deleteRepo(){
     else
       echo "Aborting Repository deletion"
     fi
+    selectedRepo=""
+    selectedRepoName=""
   fi
 }
 
@@ -371,6 +373,8 @@ if [ $noRepo == false ];then
     ;;
     0 ) echo "Goodbye!"
     cd $baseFolder
+    selectedRepo=""
+    selectedRepoName=""
     break
     ;;
     *) echo "You entetered a number outside of the available options."
