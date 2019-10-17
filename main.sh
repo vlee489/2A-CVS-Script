@@ -21,13 +21,16 @@ zipRepo(){
   fi
 }
 
+# Makes a repository
 makeRepo(){
   echo "We're going to walk you through making a new repo"
   local newRepoName=""
   local newRepoDir=""
   local valid=false
+  # While input isn't valid
   while [ $valid == false ]; do
     read -p "Enter name of the new repo: " newRepoName
+    # Checks if file exists
     if [ -d "$repoFolder/$newRepoName" ]; then
       echo "Invalid repo name"
       echo "Folder likely already exists"
@@ -154,12 +157,14 @@ recoverRepository(){
     done <"$configFolder/"removedRepo.txt""
     optionNumbers=$((optionNumbers + 1))
     read -p "Enter number of the repo you want to recover: " userOption
+    # checks if the user gave a valid number
     if [ $userOption -lt $optionNumbers ] && [ $userOption -gt 0 ]; then
       chmod 777 $repoFolder
       local selectedRecover=$(sed "${userOption}q;d" "$configFolder/"removedRepo.txt"")
       IFS='~' read -ra recoveryArray <<< "$selectedRecover"
       local recoveryName="${recoveryArray[2]}"
       echo "Recovering: $recoveryName"
+      #Removes the extra speech marks from the recovery dir
       local recoveryDir=$(sed -e 's/^"//' -e 's/"$//' <<<"${recoveryArray[0]}")
       #Copies repo
       chmod -R 777 $recoveryDir
@@ -224,10 +229,13 @@ editFile(){
 }
 
 createFile(){
+  # read in name of new file from user
   read file
+  # check if file exists
   if [ -f $file ] ; then
     echo "file already exists"
   else
+    # If files doens't exist, then makes file
     chmod 777 $selectedRepo
     touch $file
     chmod 555 $selectedRepo
@@ -237,7 +245,9 @@ createFile(){
 
 deleteFile(){
       ls
+      # read in name of new file from user
       read file
+      # if files exists, deletes file
       if [ -f $file ] ;then
             chmod -R 777 $selectedRepo
             rm $file
@@ -251,11 +261,14 @@ deleteFile(){
 }
 
 displayLog(){
+  # if log file exists
   if [ -f ".log.txt" ]; then
     clear
+    # for each line in the log gile
     while IFS= read -r line
     do
       IFS='~' read -ra logtxt <<< "$line"
+      # displays log with date in human readable date
       echo "$(date -d @${logtxt[0]}) | ${logtxt[1]} | ${logtxt[2]}"
     done <".log.txt"
   fi
@@ -271,6 +284,7 @@ checkOutFile(){
     echo "What file would you like to checkout"
     ls
     read file
+    # if selected file exists
     if [ -f $file ] ;then
   	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
     else
