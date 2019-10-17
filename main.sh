@@ -4,8 +4,8 @@ repoFolder="Repositories"
 configFolder=".CVSConfigs"
 back=false;
 option=null;
-selectedRepo=""
-selectedRepoName=""
+selectedRepo="Repositories"
+selectedRepoName="Repositories"
 noRepo=false
 baseFolder=$(pwd)
 
@@ -198,18 +198,16 @@ listCheckoutfiles(){
 
 editFile(){
   if [ "$(ls $selectedRepo)" ]; then
-    echo "What file would you like to edit" 
-   
-    
+    echo "What file would you like to edit"
+
+
     read file
-       chmod 777 "$selectedRepo/.backup"  
-    cp $file "$selectedRepo/.backup/$(date +%s)~$file" 
+       chmod 777 "$selectedRepo/.backup"
+    cp $file "$selectedRepo/.backup/$(date +%s)~$file"
     cd .backup
     chmod 555 ".backup"
     cd ..
-    
- 
-    chmod 555 "$selectedRepo/.backup" 
+    chmod 555 "$selectedRepo/.backup"
     if [ -f $file ] ;then
   	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
   	   vi $file ## or allow user to type stuff cat show and then sed "text"
@@ -232,6 +230,9 @@ createFile(){
   if [ -f $file ] ; then
     echo "file already exists"
   else
+    chmod 777 ".log.txt"
+    echo "$(date +%s)~$file~created file"  >> ".log.txt"
+    chmod 555 ".log.txt "
     chmod 777 $selectedRepo
     touch $file
     chmod 555 $selectedRepo
@@ -242,10 +243,21 @@ createFile(){
 deleteFile(){
       ls
       read file
+
       if [ -f $file ] ;then
-            chmod -R 777 $selectedRepo
+        chmod 777 "$selectedRepo/.backup"
+     cp $file "$selectedRepo/.backup/$(date +%s)~$file"
+     cd .backup
+     chmod 555 ".backup"
+     cd ..
+
+
+     chmod 555 "$selectedRepo/.backup"
             rm $file
             echo "You have deleted the file '$file'"
+            chmod 777 ".log.txt"
+            echo "$(date +%s)~$file~Deleted file"  >> ".log.txt"
+            chmod 555 ".log.txt "
             chmod -R 555 $selectedRepo
       else
              echo "The file '$file' in not found"
@@ -265,49 +277,45 @@ displayLog(){
   fi
 }
 
-existingRecover(){
-ls 
-
-echo"What file would you recover" 
-
-read $file
-
-IFS='~' read -ra logtxt <<< "$line"
-
-}
-
-backUpOld(){
+  recoverFile(){
   clear
-  backupsDir="$selectedRepo/.backup/*"
-  for file in $backupsDir; do
-    echo $file
-  done
+  local check=false
+  local split
+    echo "Enter number of the file you want to recover"
+    echo ""
+unset options i
+  while IFS= read -r -d $'\0' fileName; do
+        options[i++]="$(basename  $fileName)"
+        done < <(find "$selectedRepo/.backup/" -type f -name "*.txt" -print0 )
+  select opt in "${options[@]}" "Exit"; do
+
+      case $opt in
+      *txt)
+      echo "You have selected option this $opt file"
+while [ $check == false ]; do
+  read -p "What would you like to rename your file to " newFile
+      if [ -f $selectedRepo/$newFile ] ; then
+        echo "file already exists"
+      else
+  chmod 777 "$selectedRepo"
+    cp "$selectedRepo/.backup/$opt" "$newFile.txt"
+   chmod 555 "$selectedRepo"
+  check=true
+ fi
+done
+break
+    ;;
+    "Exit")
+      echo "Exit backup"
+      break
+      ;;
+    *)
+      echo "Please select a valid number"
+      ;;
+  esac
+done
 }
 
-recoverFile(){
-while true
-  do
-  echo "Option 1) Recover an existing "
-  echo "Option 2) recover an old file "
-  echo "Option 0) back"
-  read -p "Please enter an option: " choice
-  case $choice in
-    1) echo "You entered one, Recover an existing file."
-          existingRecover
-          break;
-      ;;
-    2) echo "You entered two, what would you like to call the file?"
-      backUpOld
-      break;
-      ;;
-    0 ) echo "Goodbye!"
-   
-    break
-    ;;
-    *) echo "You entetered a number outside of the available options."
-  esac
-  done
-}
 
 repoFunctionMenu(){
 if [ $noRepo == false ];then
@@ -365,10 +373,13 @@ echo "Option 0) Quit"
 read -p "Please enter an option: " option
 case $option in
   1 ) echo "You entered one, open a file repository"
-  openRepo
-  cd "$selectedRepo"
-  echo $(pwd)
-  repoFunctionMenu
+  ls
+
+  ##openRepo
+##  cd "$selectedRepo"
+##  echo $(pwd)
+##  repoFunctionMenu
+    recoverFile
   ;;
   2 ) echo "You entered two, create a new file repository:"
     makeRepo
