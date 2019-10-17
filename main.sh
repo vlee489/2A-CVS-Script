@@ -39,6 +39,7 @@ makeRepo(){
         chmod 777 $repoFolder
         mkdir $repoFolder/$newRepoName
         touch "$repoFolder/$newRepoName/.log.txt"
+        mkdir "$repoFolder/$newRepoName/.backup"
         chmod -R 551 $repoFolder/$newRepoName
         chmod 551 $repoFolder
         valid=true
@@ -189,7 +190,6 @@ recoverRepository(){
   fi
 }
 
-
 listCheckoutfiles(){
   # Places ls output for file
   echo -e "$(ls -lR)" >> "$baseFolder/$configFolder/.temptxt.txt"
@@ -213,6 +213,9 @@ editFile(){
     echo "What file would you like to edit"
     ls
     read file
+    chmod -R 777 "$selectedRepo/.backup"
+    cp $file "$selectedRepo/.backup/$(date +%s)~$file"
+    chmod -R 555 "$selectedRepo/.backup"
     if [ -f $file ] ;then
   	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
   	   vi $file ## or allow user to type stuff cat show and then sed "text"
@@ -238,6 +241,9 @@ createFile(){
     echo "file already exists"
   else
     # If files doens't exist, then makes file
+    chmod 777 ".log.txt"
+    echo "$(date +%s)~$file~created file"  >> ".log.txt"
+    chmod 555 ".log.txt "
     chmod 777 $selectedRepo
     touch $file
     chmod 555 $selectedRepo
@@ -246,20 +252,25 @@ createFile(){
 }
 
 deleteFile(){
-      ls
-      # read in name of new file from user
-      read file
-      # if files exists, deletes file
-      if [ -f $file ] ;then
-            chmod -R 777 $selectedRepo
-            rm $file
-            echo "You have deleted the file '$file'"
-            chmod -R 555 $selectedRepo
-      else
-             echo "The file '$file' in not found"
-             echo "Sending back to menu"
-      fi
-      #loop menu
+  ls
+  read file
+  if [ -f $file ] ;then
+    chmod 777 "$selectedRepo/.backup"
+    cp $file "$selectedRepo/.backup/$(date +%s)~$file"
+    cd .backup
+    chmod 555 ".backup"
+    cd ..
+    chmod 555 "$selectedRepo/.backup"
+    rm $file
+    echo "You have deleted the file '$file'"
+    chmod 777 ".log.txt"
+    echo "$(date +%s)~$file~Deleted file"  >> ".log.txt"
+    chmod 555 ".log.txt "
+    chmod -R 555 $selectedRepo
+  else
+    echo "The file '$file' in not found"
+    echo "Sending back to menu"
+  fi
 }
 
 displayLog(){
@@ -276,11 +287,6 @@ displayLog(){
   fi
 }
 
-recoverFile(){
-  echo "In Making"
-}
-
-
 checkOutFile(){
   if [ "$(ls $selectedRepo)" ]; then
     echo "What file would you like to checkout"
@@ -288,7 +294,10 @@ checkOutFile(){
     read file
     # if selected file exists
     if [ -f $file ] ;then
-  	   chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
+      chmod -R 777 "$selectedRepo/.backup"
+      cp $file "$selectedRepo/.backup/$(date +%s)~$file"
+      chmod -R 555 "$selectedRepo/.backup"
+      chmod 777 "$file" # Only changes user i can't seem  to change the other people permissions UGO doesn't seem to work
     else
      	  echo "The file '$file' in not found"
         echo "Sending back to menu"
@@ -314,7 +323,7 @@ checkInFile(){
       echo "${filterLine[8]} : ${filterLine[2]}"
       count=1
     fi
-  done <"$baseFolder/$configFolder/.temptxt.txt"
+    done <"$baseFolder/$configFolder/.temptxt.txt"
 
   #If the counter is equal to 1
   if ($count -eq 1); then
@@ -339,6 +348,45 @@ checkInFile(){
   fi
   rm -rf "$baseFolder/$configFolder/.temptxt.txt"
 }
+
+recoverFile(){
+  clear
+  local check=false
+  local split
+  echo "Enter number of the file you want to recover"
+  echo ""
+  unset options i
+  while IFS= read -r -d $'\0' fileName; do
+    options[i++]="$(basename  $fileName)"
+  done < <(find "$selectedRepo/.backup/" -type f -name "*.txt" -print0 )
+  select opt in "${options[@]}" "Exit"; do
+  case $opt in
+    *txt)
+    echo "You have selected option this $opt file"
+    while [ $check == false ]; do
+    read -p "What would you like to rename your file to " newFile
+    if [ -f $selectedRepo/$newFile ] ; then
+      echo "file already exists"
+    else
+      chmod 777 "$selectedRepo"
+      cp "$selectedRepo/.backup/$opt" "$newFile.txt"
+      chmod 555 "$selectedRepo"
+      check=true
+    fi
+  done
+  break
+  ;;
+  "Exit")
+    echo "Exit backup"
+    break
+  ;;
+  *)
+    echo "Please select a valid number"
+  ;;
+  esac
+d one
+}
+
 
 repoFunctionMenu(){
 if [ $noRepo == false ];then
