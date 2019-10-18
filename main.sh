@@ -384,7 +384,7 @@ recoverFile(){
     echo "Please select a valid number"
   ;;
   esac
-d one
+  done
 }
 
 
