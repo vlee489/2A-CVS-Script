@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-file="NULL";
+file="NULL"; #Jesse's bad practices
 repoFolder="Repositories"
 configFolder=".CVSConfigs"
-back=false;
 option=null;
 # Gives absolute path of selected repo
 selectedRepo=""
@@ -13,16 +12,29 @@ noRepo=false
 # base path to use
 baseFolder=$(pwd)
 
+# Checks if the script is being run on macOS or Linux
+# This is cause the date -r command is date -d on linux.
+if [ $(uname) == "Darwin" ]; then
+  dateFormat="date -r "
+else
+  dateFormat="date -d @"
+fi
+
 #Zip a repository
 zipRepo(){
   if [ $noRepo == false ] && [ $selectedRepo != "" ]; then
-    echo "Please ensure you are located in the correct directory before zipping"
-    zip -r "$SelectedRepoName.zip" $selectedRepo
+    cd $baseFolder
+    zip -r "$SelectedRepoName.zip" "$selectedRepo"
+    tar -czvf archivedRepo.tar.gz $selectedRepo
+    clear
+    echo "TARed following files"
+    tar -tf archivedRepo.tar.gz
   fi
 }
 
 # Makes a repository
 makeRepo(){
+  clear
   echo "We're going to walk you through making a new repo"
   local newRepoName=""
   local newRepoDir=""
@@ -52,6 +64,7 @@ makeRepo(){
 }
 
 openRepo(){
+  clear
   valid=false
   if [ -s "$configFolder/"repos.txt"" ]; then
     echo "List of Repositories"
@@ -93,6 +106,7 @@ openRepo(){
 }
 
 deleteRepo(){
+  clear
   echo "Please select a Repository to delete!"
   openRepo # Used to select repo
   if [ $noRepo == false ]; then
@@ -147,6 +161,7 @@ autobBackupRemoval(){
 }
 
 recoverRepository(){
+  clear
   if [ -s "$configFolder/"removedRepo.txt"" ]; then # Checks if txt file has txt
     #Like the openRepo function, it opens the txt file containing the backedup repos
     # and then displays them to allow the user to choose wich one to recover
@@ -191,6 +206,7 @@ recoverRepository(){
 }
 
 listCheckoutfiles(){
+  clear
   # Places ls output for file
   echo -e "$(ls -lR)" >> "$baseFolder/$configFolder/.temptxt.txt"
   echo "Files currently checked out"
@@ -210,6 +226,7 @@ listCheckoutfiles(){
 
 editFile(){
   if [ "$(ls $selectedRepo)" ]; then
+    clear
     echo "What file would you like to edit"
     ls
     read file
@@ -234,6 +251,7 @@ editFile(){
 }
 
 createFile(){
+  clear
   # read in name of new file from user
   read file
   # check if file exists
@@ -277,18 +295,24 @@ displayLog(){
   # if log file exists
   if [ -f ".log.txt" ]; then
     clear
-    # for each line in the log gile
+    # for each line in the log file
+    echo "      date      | file | Commit Message"
+    echo "======================================="
     while IFS= read -r line
     do
       IFS='~' read -ra logtxt <<< "$line"
       # displays log with date in human readable date
-      echo "$(date -d @${logtxt[0]}) | ${logtxt[1]} | ${logtxt[2]}"
+      echo "$($dateFormat${logtxt[0]}) | ${logtxt[1]} | ${logtxt[2]}"
     done <".log.txt"
+    # Following line from
+    # https://unix.stackexchange.com/questions/293940/bash-how-can-i-make-press-any-key-to-continue
+    read -n 1 -s -r -p "Press any key to continue"
   fi
 }
 
 checkOutFile(){
   if [ "$(ls $selectedRepo)" ]; then
+    clear
     echo "What file would you like to checkout"
     ls
     read file
@@ -311,6 +335,7 @@ checkInFile(){
   local count=0
   # Places ls output for file
   echo -e "$(ls -lR)" >> "$baseFolder/$configFolder/.temptxt.txt"
+  clear
   echo "Checking in the following files"
   # reads file line by line
   # goes through each line of the ls
@@ -361,17 +386,22 @@ recoverFile(){
   done < <(find "$selectedRepo/.backup/" -type f -name "*.txt" -print0 )
   select opt in "${options[@]}" "Exit"; do
   case $opt in
-    *txt)
+    *)
     echo "You have selected option this $opt file"
     while [ $check == false ]; do
-    read -p "What would you like to rename your file to " newFile
-    if [ -f $selectedRepo/$newFile ] ; then
-      echo "file already exists"
+    read -p "What would you like to rename your file to (with file extension):" newFile
+    if [ -z "$newFile" ]; then
+      echo "Empty filename given"
     else
-      chmod 777 "$selectedRepo"
-      cp "$selectedRepo/.backup/$opt" "$newFile.txt"
-      chmod 555 "$selectedRepo"
-      check=true
+      if [ -f $newFile ] ; then
+        echo "file already exists"
+      else
+        chmod 777 "$selectedRepo"
+        cp "$selectedRepo/.backup/$opt" "$newFile"
+        chmod 555 "$selectedRepo/$newFile"
+        chmod 555 "$selectedRepo"
+        check=true
+      fi
     fi
   done
   break
@@ -392,15 +422,17 @@ repoFunctionMenu(){
 if [ $noRepo == false ];then
   while true
   do
-  echo "Option 1) Edit a file"
-  echo "Option 2) Create a new file in the repository"
-  echo "Option 3) Delete a file"
-  echo "Option 4) List files checked out to user"
-  echo "Option 5) Display Log Files"
-  echo "Option 6) Recover Files"
-  echo "Option 0) Quit"
-  read -p "Please enter an option: " choice
-  case $choice in
+    clear
+    echo "Option 1) Edit a file"
+    echo "Option 2) Create a new file in the repository"
+    echo "Option 3) Delete a file"
+    echo "Option 4) List files checked out to user"
+    echo "Option 5) Display Log Files"
+    echo "Option 6) Recover Files"
+    echo "Option 7) List files in repo"
+    echo "Option 0) Enter main menu"
+    read -p "Please enter an option: " choice
+    case $choice in
     1) echo "You entered one, edit a file."
       editFile
       ;;
@@ -418,6 +450,12 @@ if [ $noRepo == false ];then
     ;;
     6 ) echo "You entered six, Recover file"
       recoverFile
+    ;;
+    7 ) echo "You entered seven, List files"
+      ls -R
+      # Following line from
+      # https://unix.stackexchange.com/questions/293940/bash-how-can-i-make-press-any-key-to-continue
+      read -n 1 -s -r -p "Press any key to continue"
     ;;
     0 ) echo "Goodbye!"
     cd $baseFolder
@@ -438,36 +476,40 @@ fi
 autobBackupRemoval
 while true
 do
-echo "Option 1) Open a file repository"
-echo "Option 2) Create a new file repository"
-echo "Option 3) Delete a repository"
-echo "Option 4) Recover Deleted Repository"
-echo "Option 5) Zip Repository"
-echo "Option 0) Quit"
-read -p "Please enter an option: " option
-case $option in
-  1 ) echo "You entered one, open a file repository"
-  openRepo
-  cd "$selectedRepo"
-  echo $(pwd)
-  repoFunctionMenu
-  ;;
-  2 ) echo "You entered two, create a new file repository:"
-    makeRepo
-  ;;
-  3 ) echo "You entered Three, Delete a file Repository"
-    deleteRepo
-  ;;
-  4 ) echo "You entered Four, Recover a Repository"
-    recoverRepository
-  ;;
-  5 ) echo "You entered Five, Zip Repository"
-    openRepo
-    zipRepo
-  ;;
-  0 ) echo "Goodbye!"
-  break
-  ;;
-  *) echo "You entetered a number outside of the available options."
-esac
+  clear
+  echo "Option 1) Open a file repository"
+  echo "Option 2) Create a new file repository"
+  echo "Option 3) Delete a repository"
+  echo "Option 4) Recover Deleted Repository"
+  echo "Option 5) Create Archive of a Repository"
+  echo "Option 0) Quit"
+  read -p "Please enter an option: " option
+  case $option in
+    1 ) echo "You entered one, open a file repository"
+      openRepo
+      cd "$selectedRepo"
+      echo $(pwd)
+      repoFunctionMenu
+    ;;
+    2 ) echo "You entered two, create a new file repository:"
+      makeRepo
+    ;;
+    3 ) echo "You entered Three, Delete a file Repository"
+      deleteRepo
+    ;;
+    4 ) echo "You entered Four, Recover a Repository"
+      recoverRepository
+    ;;
+    5 ) echo "You entered Five, Zip Repository"
+      openRepo
+      zipRepo
+    ;;
+    0 ) echo "Goodbye!"
+      break
+    ;;
+    9001 ) echo "Easter Egg, Over 9000!"
+    echo "\$shaveclub"
+    ;;
+    *) echo "You entetered a number outside of the available options."
+  esac
 done
