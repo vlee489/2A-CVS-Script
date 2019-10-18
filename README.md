@@ -1,5 +1,9 @@
 # 2A-CVS-Script
 
+**Note**
+This program relies on `chmod` for permissions handling and checking in/out Files
+not done via the editor, so due to this it may not work on UOD lab PCs
+
 ## install
 
 Run the `install.sh` file to install the script.
